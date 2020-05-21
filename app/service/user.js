@@ -2,6 +2,8 @@
 const Service = require('egg').Service;
 const nodemailer = require('nodemailer');
 // securet key: tbqqowtuuxhubcfb
+const clientId = 'ecef8315136a314c686f';
+const clientSecret = 'ad386f6fe085c5e5acc28281e39bd605aa11b6d9';
 const userEmail = 'ckabr@qq.com';
 const transporter = nodemailer.createTransport({
   service: 'qq',
@@ -89,5 +91,28 @@ class UserService extends Service {
   //   let count = 0;
   //   let skip = ((Number(currentPage)) - 1) *
   // }
+
+  async oAuthHandler(code) {
+    const { ctx } = this;
+
+    const res = await ctx.curl('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      contentType: 'json',
+      data: {
+        client_id: clientId,
+        client_secret: clientSecret,
+        code,
+      },
+      dataType: 'json',
+    });
+    console.log('口令:', res.data.access_token);
+    const userInfo = await ctx.curl('https://api.github.com/user', {
+      headers: {
+        Authorization: `token ${res.data.access_token}`,
+      },
+    });
+    const userInfoJson = JSON.parse(userInfo.data.toString());
+    return userInfoJson;
+  }
 }
 module.exports = UserService;

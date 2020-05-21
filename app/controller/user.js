@@ -1,8 +1,7 @@
 'use strict';
 
 const Controller = require('egg').Controller;
-const clientId = 'ecef8315136a314c686f';
-const clientSecret = 'ad386f6fe085c5e5acc28281e39bd605aa11b6d9';
+
 /**
  * @Controller 用户管理
  */
@@ -80,24 +79,8 @@ class UserController extends Controller {
 
   async oAuthLogin() {
     const { ctx } = this;
-    const res = await ctx.curl('https://github.com/login/oauth/access_token', {
-      method: 'POST',
-      contentType: 'json',
-      data: {
-        client_id: clientId,
-        client_secret: clientSecret,
-        code: ctx.query.code,
-      },
-      dataType: 'json',
-    });
-    console.log(`Access Token: ${res.data.access_token}`);
-    const userInfo = await ctx.curl('https://api.github.com/user', {
-      headers: {
-        Authorization: `token ${res.data.access_token}`,
-      },
-    });
-    const userInfoJson = JSON.parse(userInfo.data.toString());
-    const userName = userInfoJson.login;
+    const res = await ctx.service.user.oAuthHandler(ctx.query.code);
+    const userName = res.login;
     ctx.helper.success({ ctx, res: userName });
   }
 }
